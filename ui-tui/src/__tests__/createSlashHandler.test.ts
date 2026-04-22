@@ -17,6 +17,15 @@ describe('createSlashHandler', () => {
     expect(getOverlayState().picker).toBe(true)
   })
 
+  it('opens the model picker for /model with trailing whitespace', () => {
+    const ctx = buildCtx()
+
+    expect(createSlashHandler(ctx)('/model ')).toBe(true)
+    expect(getOverlayState().modelPicker).toBe(true)
+    expect(ctx.gateway.rpc).not.toHaveBeenCalled()
+    expect(ctx.gateway.gw.request).not.toHaveBeenCalled()
+  })
+
   it('opens the skills hub locally for bare /skills', () => {
     const ctx = buildCtx()
 

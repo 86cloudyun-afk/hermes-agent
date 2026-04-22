@@ -64,7 +64,7 @@ export const sessionCommands: SlashCommand[] = [
         return
       }
 
-      if (!arg) {
+      if (!arg || !arg.trim()) {
         return patchOverlayState({ modelPicker: true })
       }
 

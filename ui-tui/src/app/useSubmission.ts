@@ -29,6 +29,9 @@ const expandSnips = (snips: PasteSnippet[]) => {
 const spliceMatches = (text: string, matches: RegExpMatchArray[], results: string[]) =>
   matches.reduceRight((acc, m, i) => acc.slice(0, m.index!) + results[i] + acc.slice(m.index! + m[0].length), text)
 
+export const shouldAutoSubmitSlashCompletion = (value: string, next: string) =>
+  value.startsWith('/') && next.startsWith('/') && next !== value && next.trimEnd() === value.trimEnd()
+
 export function useSubmission(opts: UseSubmissionOptions) {
   const {
     appendMessage,
@@ -244,6 +247,10 @@ export function useSubmission(opts: UseSubmissionOptions) {
           const next = value.slice(0, composerState.compReplace) + text
 
           if (next !== value) {
+            if (shouldAutoSubmitSlashCompletion(value, next)) {
+              return dispatchSubmission(next.trimEnd())
+            }
+
             return composerActions.setInput(next)
           }
         }

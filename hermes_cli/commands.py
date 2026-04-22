@@ -1171,6 +1171,39 @@ class SlashCommandCompleter(Completer):
                         display=name,
                         display_meta=f"{identity.vendor}/{identity.family}",
                     )
+
+            from hermes_cli.config import load_config
+
+            cfg = load_config()
+            custom_providers = cfg.get("custom_providers") if isinstance(cfg, dict) else []
+            if isinstance(custom_providers, list):
+                for entry in custom_providers:
+                    if not isinstance(entry, dict):
+                        continue
+                    provider_name = str(entry.get("name") or "").strip()
+                    if not provider_name:
+                        continue
+                    display_meta = f"custom:{provider_name.lower().replace(' ', '-')}"
+                    models = entry.get("models")
+                    if isinstance(models, dict):
+                        model_ids = list(models.keys())
+                    elif isinstance(models, list):
+                        model_ids = list(models)
+                    else:
+                        default_model = str(entry.get("model") or "").strip()
+                        model_ids = [default_model] if default_model else []
+                    for mid in model_ids:
+                        model_name = str(mid).strip()
+                        if not model_name or model_name in seen or model_name == sub_lower:
+                            continue
+                        if model_name.startswith(sub_lower):
+                            seen.add(model_name)
+                            yield Completion(
+                                model_name,
+                                start_position=-len(sub_text),
+                                display=model_name,
+                                display_meta=display_meta,
+                            )
         except Exception:
             pass
 

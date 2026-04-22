@@ -126,6 +126,38 @@ class TestPathCompletions:
         assert "README.md" in names
 
 
+class TestModelCompletions:
+    def test_includes_custom_provider_models_from_config(self, monkeypatch):
+        import hermes_cli.config as config_mod
+        import hermes_cli.model_switch as model_switch
+
+        monkeypatch.setattr(model_switch, "_ensure_direct_aliases", lambda: None)
+        monkeypatch.setattr(model_switch, "DIRECT_ALIASES", {})
+        monkeypatch.setattr(model_switch, "MODEL_ALIASES", {})
+        monkeypatch.setattr(
+            config_mod,
+            "load_config",
+            lambda: {
+                "custom_providers": [
+                    {"name": "amis", "models": {"amis/vision": {}, "amis/chat": {}}},
+                    {"name": "edge", "models": ["edge/mini"]},
+                    {"name": "solo", "model": "solo/default"},
+                ]
+            },
+        )
+
+        completions = list(SlashCommandCompleter()._model_completions("a", "a"))
+        names = _display_names(completions)
+        metas = _display_metas(completions)
+
+        assert "amis/chat" in names
+        assert "amis/vision" in names
+        assert "edge/mini" not in names
+        assert "solo/default" not in names
+        assert metas[names.index("amis/chat")] == "custom:amis"
+        assert metas[names.index("amis/vision")] == "custom:amis"
+
+
 class TestIntegration:
     """Test the completer produces path completions via the prompt_toolkit API."""
 
